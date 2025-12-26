@@ -1,0 +1,8 @@
+{
+  "checkInterval": 3600000,
+  "cveApiUrl": "https://cve.mitre.org/api",
+  "chromeVersion": "latest",
+  "alertEmail": "security@example.com",
+  "port": 3000
+}
+

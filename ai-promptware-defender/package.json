@@ -1,0 +1,14 @@
+{
+  "name": "ai-promptware-defender",
+  "version": "1.0.0",
+  "description": "MVP solution for defending against AI promptware attacks",
+  "main": "defender.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-prompt-injection.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+

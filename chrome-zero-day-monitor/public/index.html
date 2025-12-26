@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Zero-Day Monitor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #e74c3c;
+        }
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .vulnerabilities {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .vuln-item {
+            padding: 15px;
+            border-left: 4px solid #e74c3c;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .vuln-item h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .vuln-item .meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            background: #fee;
+            color: #c33;
+        }
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔴 Chrome Zero-Day Monitor</h1>
+            <p>Real-time monitoring of Chrome zero-day vulnerabilities</p>
+        </header>
+
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <h3>Total Vulnerabilities</h3>
+                <div class="value" id="total">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Critical Zero-Days</h3>
+                <div class="value" id="critical">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unpatched</h3>
+                <div class="value" id="unpatched">-</div>
+            </div>
+            </div>
+            <div class="stat-card">
+                <h3>Actively Exploited</h3>
+                <div class="value" id="exploited">-</div>
+            </div>
+        </div>
+
+        <button onclick="checkZeroDays()">Check for Zero-Days</button>
+
+        <div class="vulnerabilities">
+            <h2>Active Zero-Day Vulnerabilities</h2>
+            <div id="zeroDaysList"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadStats() {
+            const res = await fetch('/api/stats');
+            const stats = await res.json();
+            document.getElementById('total').textContent = stats.total;
+            document.getElementById('critical').textContent = stats.critical;
+            document.getElementById('unpatched').textContent = stats.unpatched;
+            document.getElementById('exploited').textContent = stats.activelyExploited;
+        }
+
+        async function loadZeroDays() {
+            const res = await fetch('/api/zero-days');
+            const data = await res.json();
+            const list = document.getElementById('zeroDaysList');
+            
+            if (data.zeroDays.length === 0) {
+                list.innerHTML = '<p>No active zero-days detected.</p>';
+                return;
+            }
+
+            list.innerHTML = data.zeroDays.map(v => `
+                <div class="vuln-item">
+                    <h3>${v.cve} - ${v.component} <span class="badge">${v.severity}</span></h3>
+                    <div class="meta">
+                        <span><strong>CVSS:</strong> ${v.cvss}</span>
+                        <span><strong>Status:</strong> ${v.status}</span>
+                        <span><strong>Component:</strong> ${v.component}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function checkZeroDays() {
+            const res = await fetch('/api/check', { method: 'POST' });
+            const data = await res.json();
+            alert(`Check completed. Found ${data.zeroDaysFound} active zero-days.`);
+            loadZeroDays();
+            loadStats();
+        }
+
+        // Load on page load
+        loadStats();
+        loadZeroDays();
+        
+        // Refresh every 5 minutes
+        setInterval(() => {
+            loadStats();
+            loadZeroDays();
+        }, 300000);
+    </script>
+</body>
+</html>
+

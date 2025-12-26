@@ -1,0 +1,13 @@
+node_modules/
+.env
+*.log
+.DS_Store
+*.json.bak
+vulnerabilities.json
+android-security-report.json
+package-lock.json
+__pycache__/
+*.pyc
+.venv/
+venv/
+
